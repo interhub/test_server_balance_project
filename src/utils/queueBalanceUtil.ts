@@ -4,6 +4,7 @@ const mq = new AWS.SQS({
   region: 'ru-central1',
   endpoint: 'https://message-queue.api.cloud.yandex.net',
   credentials: {
+    //my personal Yandex Cloud Queue Config Credentials
     accessKeyId: 'YCAJE4ERwvGTmmi4xEda73iXx',
     secretAccessKey: 'YCPIuYR4Jhk_scZ3Vhp9yF_V3uQKiOd7Si17Bw7y',
   },
