@@ -22,5 +22,8 @@
     "strict": true,
     "allowJs": true,
     "resolveJsonModule": true
-  }
+  },
+  "exclude": [
+    "ecosystem.config.js"
+  ]
 }
