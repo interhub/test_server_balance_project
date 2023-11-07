@@ -6,11 +6,12 @@ export const amountPropsValidationMiddleware: RequestHandler<{ user_id: string }
   if (!isNumber(amount)) {
     return res.status(400).json({ message: '"amount" body props should be number' });
   }
-  if (isInteger(amount)) {
-    return res.status(400).json({ message: '"amount" body props should not integer' });
-  }
   if (amount < 0) {
-    return res.status(400).json({ message: '"amount" body props should not be negative' });
+    return res.status(400).json({ message: '"amount" body props should be positive' });
   }
+  if (!isInteger(amount)) {
+    return res.status(400).json({ message: '"amount" body props should be integer' });
+  }
+
   req.next();
 };
