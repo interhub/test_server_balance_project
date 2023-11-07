@@ -14,7 +14,7 @@ module.exports = {
       merge_logs: true,
       exec_mode: 'cluster',
       wait_ready: false,
-      name: 'bismap-node',
+      name: 'test_server_balance_project',
       error_file: './logs/ecosystem.error.log',
       log_file: './logs/ecosystem.info.log',
       env: {
