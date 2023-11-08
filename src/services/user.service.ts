@@ -1,9 +1,11 @@
 import { UserModel } from '../models/user.model';
 import { CreateUserDto, UpdateUserDto } from '../dto/user.dto';
+import { waitForMs } from '../utils/test/waitForMs';
 
 class UserService {
   public getUserById = async (user_id: string): Promise<UserModel | undefined> => {
     try {
+      await waitForMs(50);
       return;
     } catch (e) {
       console.log(e, 'getUserById_ err', { user_id });
@@ -12,6 +14,7 @@ class UserService {
 
   public getUserBy = async (props: Partial<UserModel>): Promise<UserModel | undefined> => {
     try {
+      await waitForMs(50);
       return;
     } catch (e) {
       console.log(e, 'getUserBy_ err', { props });
@@ -20,6 +23,7 @@ class UserService {
 
   public getBalanceById = async (user_id: string): Promise<number> => {
     try {
+      await waitForMs(50);
       return;
     } catch (e) {
       console.log(e, 'getBalanceById_ err', { user_id });
@@ -29,6 +33,7 @@ class UserService {
 
   public getAllUsers = async (): Promise<UserModel[]> => {
     try {
+      await waitForMs(50);
       return [];
     } catch (e) {
       console.log(e, 'getAllUsers_ err');
@@ -38,6 +43,7 @@ class UserService {
 
   public createUser = async (data: CreateUserDto): Promise<UserModel | undefined> => {
     try {
+      await waitForMs(50);
       return;
     } catch (e) {
       console.log(e, 'createUser_ err', { data });
@@ -46,6 +52,7 @@ class UserService {
 
   public updateUser = async (user_id: string, data: UpdateUserDto): Promise<UserModel | undefined> => {
     try {
+      await waitForMs(50);
       return;
     } catch (e) {
       console.log(e, 'updateUser_ err', { user_id, data });

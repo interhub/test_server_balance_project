@@ -12,17 +12,17 @@ app.use(amountPropsValidationMiddleware);
 app.put<{ user_id: string }, BalanceActionResponseType, { amount: number }>('/increase/:user_id', async (req, res) => {
   const user_id = req.params?.user_id;
   const amount = req.body.amount;
-  await queueBalanceUtil.startActionTask();
+  const { task_id } = await queueBalanceUtil.startActionTask();
   const { success, balance, user } = await balanceService.increaseBalanceBy(user_id, amount);
-  await queueBalanceUtil.finishActionTask();
+  await queueBalanceUtil.finishActionTask(task_id);
   return res.status(200).json({ success, balance, user });
 });
 app.put<{ user_id: string }, BalanceActionResponseType, { amount: number }>('/decrease/:user_id', async (req, res) => {
   const user_id = req.params?.user_id;
   const amount = req.body.amount;
-  await queueBalanceUtil.startActionTask();
+  const { task_id } = await queueBalanceUtil.startActionTask();
   const { success, balance, user } = await balanceService.decreaseBalanceBy(user_id, amount);
-  await queueBalanceUtil.finishActionTask();
+  await queueBalanceUtil.finishActionTask(task_id);
   return res.status(200).json({ success, balance, user });
 });
 

@@ -1,70 +1,71 @@
-import AWS from 'aws-sdk';
+import { v4 } from 'uuid';
+import { head } from 'lodash';
 
-const mq = new AWS.SQS({
-  region: 'ru-central1',
-  endpoint: 'https://message-queue.api.cloud.yandex.net',
-  credentials: {
-    //my personal Yandex Cloud Queue Config Credentials
-    accessKeyId: 'YCAJE4ERwvGTmmi4xEda73iXx',
-    secretAccessKey: 'YCPIuYR4Jhk_scZ3Vhp9yF_V3uQKiOd7Si17Bw7y',
-  },
-});
+enum TASK_STATUS {
+  WAITING = 'WAITING',
+  IN_PROGRESS = 'IN_PROGRESS',
+}
 
-const queueUrl = 'https://message-queue.api.cloud.yandex.net/b1g8clh0g34jn32gn7og/dj600000000vuijk07bg/test-queue';
 const logs = false;
 
 class QueueBalanceUtil {
-  constructor() {
-    this.clearStack();
-  }
+  private queue: { task_id: string; play: () => any; index: number; status: TASK_STATUS }[] = [];
+  private index = 0;
 
-  private clearStack = async () => {
-    const res = await mq.purgeQueue({ QueueUrl: queueUrl }).promise();
-    const data = res?.$response?.data;
+  public startActionTask = async (): Promise<{ task_id: string }> => {
+    const task_id = v4();
     if (logs) {
-      console.log(data, 'messages removed');
+      console.log({ task_id }, 'started');
     }
-  };
-
-  public startActionTask = async () => {
-    const params: AWS.SQS.SendMessageRequest = {
-      QueueUrl: queueUrl,
-      MessageBody: '',
-    };
-
-    const result = await mq.sendMessage(params).promise();
-    const messageId = result?.MessageId || '';
-    if (logs) {
-      console.log('message sent', messageId);
-    }
-  };
-
-  public finishActionTask = async () => {
-    const params = {
-      QueueUrl: queueUrl,
-      WaitTimeSeconds: 10,
-      MaxNumberOfMessages: 1,
-    };
-
-    const result = await mq.receiveMessage(params).promise();
-    const messages = result?.Messages || [];
-
-    if (logs) {
-      console.log(messages.length, 'result receive messages len');
-    }
-
-    messages.forEach(async function (msg) {
-      const messageId = msg['MessageId'];
-      if (logs) {
-        console.log('message received', messageId);
+    await new Promise<void>((ok) => {
+      const someInProgress = this.queue.some((t) => t.status === TASK_STATUS.IN_PROGRESS);
+      if (someInProgress) {
+        this.queue.push({ task_id, play: ok, index: this.index++, status: TASK_STATUS.WAITING });
+      } else {
+        this.queue.push({ task_id, play: ok, index: this.index++, status: TASK_STATUS.IN_PROGRESS });
+        ok();
       }
+    });
+    if (logs) {
+      console.log({ task_id }, 'finished after start');
+    }
+    return { task_id };
+  };
 
-      const deleteParams: AWS.SQS.DeleteMessageRequest = {
-        QueueUrl: queueUrl,
-        ReceiptHandle: msg['ReceiptHandle'],
-      };
-      await mq.deleteMessage(deleteParams).promise();
-    } as any);
+  public finishActionTask = async (task_id: string) => {
+    if (logs) {
+      console.log('start task finishing', { task_id });
+    }
+    this.removeTask(task_id);
+    const nextTask = head(this.queue);
+    if (nextTask) {
+      this.updateTaskStatus(nextTask.task_id, TASK_STATUS.IN_PROGRESS);
+      nextTask.play();
+    }
+    if (!nextTask) {
+      this.onEmptyCb();
+    }
+    if (logs) {
+      console.log({ task_id, next_task_id: nextTask?.task_id, next_index: nextTask?.index }, 'completed started next');
+    }
+  };
+
+  public removeTask = (task_id: string) => {
+    this.queue = this.queue.filter((t) => t.task_id !== task_id);
+    if (logs) {
+      console.log({ task_id }, 'removed');
+    }
+  };
+
+  private updateTaskStatus = (task_id: string, status: TASK_STATUS) => {
+    const taskIndex = this.queue.findIndex((t) => t.task_id === task_id);
+    if (taskIndex < 0) return;
+    this.queue[taskIndex].status = status;
+  };
+
+  private onEmptyCb = () => {};
+  public handleEmptyEvent = async (cb: () => any) => {
+    this.onEmptyCb = cb;
   };
 }
 
